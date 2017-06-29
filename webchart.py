@@ -21,8 +21,7 @@ import re
 import time
 from flask import Flask, send_from_directory, jsonify
 
-data_source = 'data.txt'
-last_time = os.path.getmtime(data_source)
+last_time = 0
 
 app = Flask(__name__)
 
@@ -33,7 +32,7 @@ def index():
 @app.route('/all_data')
 def all_data():
     data = []
-    with open(data_source, 'r') as source:
+    with open(app.data_source, 'r') as source:
         for line in source:
             x, y = re.split('\s+', line.rstrip())
             data.append({'x': x, 'y':y})
@@ -43,10 +42,10 @@ def all_data():
 @app.route('/poll')
 def poll():
     global last_time
-    while (os.path.getmtime(data_source) == last_time):
+    while (os.path.getmtime(app.data_source) == last_time):
         time.sleep(0.01)
-    last_time = os.path.getmtime(data_source)
-    with open(data_source, 'r') as source:
+    last_time = os.path.getmtime(app.data_source)
+    with open(app.data_source, 'r') as source:
         source.seek(0,2)
         end = source.tell()
         if end < 1024:
@@ -64,5 +63,11 @@ def send_js(path):
 
 
 if __name__ == '__main__':
-
+    import argparse
+    parser = argparse.ArgumentParser(description='Watch a file and plot data as it is written.')
+    parser.add_argument('data_source', metavar='file', type=str, nargs='?',
+                   help='file to watch')
+    args = parser.parse_args()
+    print(args)
+    app.data_source = args.data_source
     app.run(threaded=True)
