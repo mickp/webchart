@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Webchart</title>
+    <script src="moment.js"></script>
     <script src="chart.js"></script>
     <script src="jquery.min.js"></script>
-
 </head>
 
 <body>
@@ -44,6 +44,9 @@
                 duration: 0,
             },
             scales: {
+                xAxes: [{
+                    type: 'time',
+                }],
                 yAxes: [{
                     ticks: {
                         beginAtZero:false
