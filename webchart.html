@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Webchart</title>
+    <script src="chart.js"></script>
+    <script src="jquery.min.js"></script>
+
+</head>
+
+<body>
+    <canvas id="myChart" width="400" height="400"></canvas>
+</body>
+
+<script>
+    var ctx = document.getElementById("myChart").getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: '',
+                fill: false,
+                backgroundColor: 'red',
+                borderColor: 'red',
+                borderWidth: 1
+            },
+            {
+                label: '',
+                fill: false,
+                backgroundColor: null,
+                borderColor: 'red',
+                borderWidth: 0.2,
+            }]
+        },
+        options: {
+            legend: {
+                display: false,
+            },
+            animation: {
+                duration: 0,
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:false
+                    }
+                }]
+            }
+        }
+    });
+
+
+    var chartLength = 4;
+    var deci = 1;
+    var count = 0;
+
+
+    function decimate(element, index, array, factor=2) {
+        return index % factor == 0;
+    }
+
+    function addData(data) {
+        var chartdata = myChart.data.datasets[0].data;
+        var rawdata = myChart.data.datasets[1].data;
+
+        count += 1;
+        rawdata.push(data);
+
+        if (count == deci) {
+            chartdata.push(data);
+            count = 0;
+            rawdata.splice(0, rawdata.length);
+        }
+
+        if (chartdata.length > chartLength) {
+            decimated = chartdata.filter(decimate);
+            myChart.data.datasets[0].data = decimated;
+            deci *= 2;
+        }
+
+        myChart.update();
+    };
+
+    var t = 0.0;
+    function addRandom() {
+        addData({x: t, y:Math.random()});
+        t += 0.1;
+    };
+
+    var except;
+
+    function poll() {
+        var poll_interval = 0;
+
+        $.ajax({
+            url: '/poll',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                addData(data);
+                poll_interval = 0;
+            },
+            error: function (exception) {
+                poll_interval = 1000;
+                except = exception;
+            },
+            complete: function () {
+                setTimeout(poll, poll_interval);
+            },
+        });
+    };
+
+    $(document).ready(function() {
+        $.ajax({
+            url: '/all_data',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data){
+                myChart.data.datasets[0].data = data;
+                myChart.update()
+            }
+        });
+        poll();
+    });
+
+</script>
+
+</html>
