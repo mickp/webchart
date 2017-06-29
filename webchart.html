@@ -66,9 +66,15 @@
         return index % factor == 0;
     }
 
+    last_data = null;
+
     function addData(data) {
         var chartdata = myChart.data.datasets[0].data;
         var rawdata = myChart.data.datasets[1].data;
+
+        if (JSON.stringify(data) == JSON.stringify(last_data)) {
+            return;
+        }
 
         count += 1;
         rawdata.push(data);
