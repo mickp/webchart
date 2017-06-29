@@ -35,7 +35,7 @@ def all_data():
     data = []
     with open(data_source, 'r') as source:
         for line in source:
-            x, y = re.split('\s', line.rstrip())
+            x, y = re.split('\s+', line.rstrip())
             data.append({'x': x, 'y':y})
     return jsonify(data)
 
@@ -54,8 +54,7 @@ def poll():
         else:
             source.seek(end - 512)
         line = source.readlines()[-1]
-    x, y = re.split('\s', line.rstrip())
-    print(x,y)
+    x, y = re.split('\s+', line.rstrip())
     return jsonify({'x': x, 'y': y})
 
 
