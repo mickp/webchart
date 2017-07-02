@@ -66,8 +66,11 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Watch a file and plot data as it is written.')
     parser.add_argument('data_source', metavar='file', type=str, nargs='?',
-                   help='file to watch')
+                            help='file to watch')
+    parser.add_argument('--public', action='store_const', dest='host',
+                            default='127.0.0.1', const='0.0.0.0',
+                            help='listen on public interfaces')
     args = parser.parse_args()
     print(args)
     app.data_source = args.data_source
-    app.run(threaded=True)
+    app.run(threaded=True, host=args.host)
