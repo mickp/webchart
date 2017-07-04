@@ -129,6 +129,11 @@
             type: 'GET',
             dataType: 'json',
             success: function(data){
+                deci = 1;
+                while (Math.floor(data.length / chartLength) > 0) {
+                    data = data.filter(decimate);
+                    deci *= 2;
+                }
                 myChart.data.datasets[0].data = data;
                 myChart.update()
             }
