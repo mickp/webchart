@@ -19,15 +19,28 @@
 import os
 import re
 import time
-from flask import Flask, send_from_directory, jsonify
-
-last_time = 0
+from flask import Flask, send_from_directory, jsonify, session
 
 app = Flask(__name__)
+app.secret_key = '/W3b/Ch4rt/S3cr3t!'
+
+@app.after_request
+def add_headers(r):
+    """Add headers to prevent caching."""
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    return r
 
 @app.route('/')
 def index():
     return send_from_directory('./', 'webchart.html')
+
+@app.route('/raw_data')
+def raw_data():
+    data = []
+    with open(app.data_source, 'r') as source:
+        return jsonify(source.readlines())
+
 
 @app.route('/all_data')
 def all_data():
@@ -36,25 +49,26 @@ def all_data():
         for line in source:
             x, y = re.split('\s+', line.rstrip())
             data.append({'x': x, 'y':y})
+        session['last_seek'] = source.tell()
     return jsonify(data)
 
 
 @app.route('/poll')
 def poll():
-    global last_time
-    while (os.path.getmtime(app.data_source) == last_time):
-        time.sleep(0.01)
-    last_time = os.path.getmtime(app.data_source)
+    if 'last_mtime' not in session:
+        session['last_mtime'] = 0
+    while (os.path.getmtime(app.data_source) == session['last_mtime']):
+        time.sleep(1)
+    session['last_mtime'] = os.path.getmtime(app.data_source)
     with open(app.data_source, 'r') as source:
-        source.seek(0,2)
-        end = source.tell()
-        if end < 1024:
-            source.seek(0)
-        else:
-            source.seek(end - 512)
-        line = source.readlines()[-1]
-    x, y = re.split('\s+', line.rstrip())
-    return jsonify({'x': x, 'y': y})
+        source.seek(session['last_seek'])
+        data = []
+        for line in source.readlines():
+            if len(line) == 1: continue
+            x, y = re.split('\s+', line.rstrip())
+            data.append({'x': x, 'y':y})
+        session['last_seek'] = source.tell()
+    return jsonify(data)
 
 
 @app.route('/<path:path>')

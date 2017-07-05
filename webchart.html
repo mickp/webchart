@@ -76,19 +76,21 @@
             return;
         }
 
-        count += 1;
-        rawdata.push(data);
+        for (var p in data) {
+            count += 1;
+            rawdata.push(data[p]);
 
-        if (count == deci) {
-            chartdata.push(data);
-            count = 0;
-            rawdata.splice(0, rawdata.length);
-        }
+            if (count == deci) {
+                chartdata.push(data[p]);
+                count = 0;
+                rawdata.splice(0, rawdata.length);
+            }
 
-        if (chartdata.length > chartLength) {
-            decimated = chartdata.filter(decimate);
-            myChart.data.datasets[0].data = decimated;
-            deci *= 2;
+            if (chartdata.length > chartLength) {
+                decimated = chartdata.filter(decimate);
+                myChart.data.datasets[0].data = decimated;
+                deci *= 2;
+            }
         }
 
         myChart.update();
